@@ -33,34 +33,27 @@ const roles = [
   },
 ];
 
-//creates buttons to assign roles
-client.on("ready", async (c) => {
-  try {
-    const channel = await client.channels.cache.get("1167339272509067374"); //grabs channel id and displays role options there
-    if (!channel) return;
+//creates buttons to assign roles when client enters server(guild)
+function setupRoleAssignment(client, channel) {
+      const row = new ActionRowBuilder();
 
-    const row = new ActionRowBuilder();
+      roles.forEach((role) => {
+        //creates the buttons for every role
+        row.components.push(
+          new ButtonBuilder()
+            .setCustomId(role.id)
+            .setLabel(role.label)
+            .setStyle(ButtonStyle.Primary)
+        );
+      });
 
-    roles.forEach((role) => {
-      //creates the buttons for every role
-      row.components.push(
-        new ButtonBuilder()
-          .setCustomId(role.id)
-          .setLabel(role.label)
-          .setStyle(ButtonStyle.Primary)
-      );
-    });
-
-    await channel.send({
-      //asks for what role is wanted
-      content: "Choose your path",
-      components: [row],
-    });
-
-    process.exit();
-  } catch (error) {
-    console.log(error);
-  }
-});
+      channel.send({
+        //asks for what role is wanted
+        content: "Choose your path",
+        components: [row],
+        ephemeral: true,
+      });
+}
 
 client.login(process.env.TOKEN);
+module.exports = { setupRoleAssignment };

@@ -10,6 +10,9 @@ const client = new Client({
     IntentsBitField.Flags.MessageContent,
   ],
 });
+
+const { setupRoleAssignment } = require("./send-message.js"); //imports the role assignment from send-message
+
 //turns on the bot for use
 client.on("ready", (c) => {
   console.log(`${c.user.tag} is online.`);
@@ -17,9 +20,9 @@ client.on("ready", (c) => {
 
 //creates interactions and allows them to be changed like what to do when buttons are clicked for roles
 client.on("interactionCreate", async (interaction) => {
-
   try {
-    if (interaction.isChatInputCommand()) {  //checks for the slash commands
+    if (interaction.isChatInputCommand()) {
+      //checks for the slash commands
       if (interaction.commandName == "add") {
         const num1 = interaction.options.get("first-number").value;
         const num2 = interaction.options.get("second-number").value;
@@ -56,7 +59,8 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   try {
-    if (interaction.isButton()) {  //checks for the button interactions
+    if (interaction.isButton()) {
+      //checks for the button interactions on roles
       await interaction.deferReply({ ephemeral: true });
 
       const role = interaction.guild.roles.cache.get(interaction.customId);
@@ -81,7 +85,23 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-//replys with a message based on what is received in chat
+//creates random responses based on received message
+const responses = {
+  hi: ["What up", "No hablo ingles", "I'm just a random response"],
+  // Add more content-response pairs as needed
+};
+
+//function for grabbing a random reponses
+function getRandomResponse(content) {
+  if (responses[content]) {
+    const responseArray = responses[content];
+    const randomIndex = Math.floor(Math.random() * responseArray.length);
+    return responseArray[randomIndex];
+  }
+  return null;
+}
+
+//does something based on what message is received in chat
 client.on("messageCreate", (message) => {
   if (message.author.bot) {
     return;
@@ -111,15 +131,33 @@ client.on("messageCreate", (message) => {
 
     message.channel.send({ embeds: [embed] });
   }
-  //responds if user says hi to chat
+
   if (
     message.content.toLowerCase().includes("hello") ||
     message.content.toLowerCase().includes("hey") ||
-    message.content.toLowerCase().includes("sup") ||
-    message.content.toLowerCase().includes("hi")
+    message.content.toLowerCase().includes("sup")
   ) {
     message.reply("sup fool");
   }
+  //responds if user says hi to chat
+  if (message.content.toLowerCase().includes("hi")) {
+    // Get a random response for the content
+    const response = getRandomResponse("hi");
+
+    // Reply with the random response
+    if (response) {
+      message.reply(response);
+    }
+  }
+
+  if (message.content.toLowerCase().includes("role")) {
+    setupRoleAssignment(client, message.channel);
+  }
+});
+
+client.on("guildMemberAdd", (member) => {
+  // Trigger the role assignment functionality when a new member joins
+  setupRoleAssignment(client, member.guild.systemChannel);
 });
 
 client.login(process.env.TOKEN);
